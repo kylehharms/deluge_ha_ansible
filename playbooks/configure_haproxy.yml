@@ -37,6 +37,13 @@
         state: enabled
         immediate: yes
 
+    - name: Open port 8080
+      firewalld:
+        port: 8080/tcp
+        permanent: yes
+        state: enabled
+        immediate: yes
+
     - name: Reload firewalld
       systemd:
         name: firewalld
