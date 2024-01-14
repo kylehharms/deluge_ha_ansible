@@ -1,0 +1,58 @@
+- name: Setup HAProxy for Three-Node Cluster
+  hosts: haproxy
+  become: true
+  gather_facts: true
+  vars_files:
+    - vars/vars.yml
+  
+  #this is the password for the haproxy interface, available at the haproxy_ip:8080. The default username is `haproxy` but can be changed in vars.yml
+  vars_prompt:
+    - name: "HAPROXY_PASSWORD"
+      prompt: "Enter password for the haproxy user for use with the haproxy web interface"
+      private: yes
+
+  tasks:
+    - name: Update dnf repositories (for AlmaLinux)
+      dnf:
+        name: '*'
+        state: latest
+      when: ansible_distribution == "AlmaLinux"
+
+    - name: Install HAProxy
+      dnf:
+        name: haproxy
+        state: present
+
+    - name: Configure HAProxy
+      template:
+        src: haproxy.cfg.j2
+        dest: /etc/haproxy/haproxy.cfg
+      notify:
+        - restart haproxy
+
+    - name: Open port 3306
+      firewalld:
+        port: 3306/tcp
+        permanent: yes
+        state: enabled
+        immediate: yes
+
+    - name: Open port 8080
+      firewalld:
+        port: 8080/tcp
+        permanent: yes
+        state: enabled
+        immediate: yes
+
+    - name: Reload firewalld
+      systemd:
+        name: firewalld
+        state: reloaded
+      notify:
+        - restart haproxy
+
+  handlers:
+    - name: restart haproxy
+      service:
+        name: haproxy
+        state: restarted
