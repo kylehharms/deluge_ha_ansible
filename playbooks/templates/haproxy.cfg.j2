@@ -62,12 +62,11 @@ listen webinterface
     stats auth {{ HAPROXY_USER }}:{{ HAPROXY_PASSWORD }}
 
 # Load Balancing for Galera Cluster
-listen galera 
+listen deluge
     bind {{ ansible_host }}:8112
     balance roundrobin
     mode tcp
     option tcpka
-    option mysql-check user haproxy
     server node1 {{ NODE1_IP }}:8112 check weight 1
     server node2 {{ NODE2_IP }}:8112 check weight 1
     server node3 {{ NODE3_IP }}:8112 check weight 1
